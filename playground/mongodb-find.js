@@ -25,7 +25,7 @@ MongoClient.connect('mongodb://localhost:27017/TodoApp', { useNewUrlParser: true
     // }, (err) => {
     //     console.log('Unable to fetch todos', err);
     // });
-    
+
     db.collection('Users').find({
         name: 'Semen', 
         location: 'Lublin'
