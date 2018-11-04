@@ -35,15 +35,17 @@ app.get('/todos', (req, res) => {
 // GET /todos/{id}
 app.get('/todos/:id', (req, res) => {
     var todoId = req.params.id;
+
     if(!ObjectID.isValid(todoId)){
-        res.status(404).send();
+        return res.status(404).send();
     }
+
     Todo.findById(todoId).then((todo) => {
         if(!todo) {
             return res.status(404).send('There is no todo exists');
         }
         res.send({todo});
-    }, (e) => {
+    }).catch((e) => {
         res.status(400).send(e);
     });
 });
