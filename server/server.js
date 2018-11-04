@@ -40,10 +40,9 @@ app.get('/todos/:id', (req, res) => {
     }
     Todo.findById(todoId).then((todo) => {
         if(!todo) {
-            res.status(404).send('There is no todo exists');
-        } else {
-            res.send({todo});
+            return res.status(404).send('There is no todo exists');
         }
+        res.send({todo});
     }, (e) => {
         res.status(400).send(e);
     });
