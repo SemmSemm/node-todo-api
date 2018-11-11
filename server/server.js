@@ -1,4 +1,5 @@
 const express = require('express');
+const _ = require('lodash');
 const {ObjectID} = require('mongodb');
 //bodyParser taking our JSON and convert it to object
 const bodyParser = require('body-parser');
@@ -68,8 +69,42 @@ app.delete('/todos/:id', (req, res) => {
     });
 });
 
+app.patch('/todos/:id', (req, res) => {
+    var id = req.params.id;
+    // _.pick() takes an object, in our case its body
+    // takes an array of properties, which we want to pull off
+    var body = _.pick(req.body, ['text', 'completed']);
+
+    if(!ObjectID.isValid(id)){
+        return res.status(404).send();
+    }
+    console.log(_.isBoolean(body.completed));
+    console.log(body.completed);
+    if(_.isBoolean(body.completed) && body.completed) {
+        body.completedat = new Date().getTime();
+    } else {
+        body.completed = false;
+        body.completedat = null;
+    }
+
+    Todo.findByIdAndUpdate(id, {
+        $set: body
+    }, {
+        new: true
+    }).then((todo) => {
+        if(!todo) {
+            return res.status(404).send();
+        }
+
+        res.send({todo});
+    }).catch((e) => {
+        res.status(400).send();
+    });
+});
+
 app.listen(port, () => {
     console.log(`Listening on port ${port}`);
 });
+
 
 module.exports = {app};
