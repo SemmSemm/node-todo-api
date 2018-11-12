@@ -1,3 +1,5 @@
+require('./config/config');
+
 const express = require('express');
 const _ = require('lodash');
 const {ObjectID} = require('mongodb');
@@ -9,7 +11,7 @@ var {Todo} = require('./models/todo');
 var {User} = require('./models/user');
 
 var app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT;
 
 app.use(bodyParser.json());
 
@@ -74,7 +76,7 @@ app.patch('/todos/:id', (req, res) => {
     // _.pick() takes an object, in our case its body
     // takes an array of properties, which we want to pull off
     var body = _.pick(req.body, ['text', 'completed']);
-
+    
     if(!ObjectID.isValid(id)){
         return res.status(404).send();
     }
