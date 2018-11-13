@@ -38,6 +38,8 @@ var UserSchema = new mongoose.Schema({
     }]
 });
 
+// overriding mongoose toJSON method
+// determining how Mongoose documents get serialized by JSON.stringify()
 UserSchema.methods.toJSON = function () {
     var user = this;
     var userObject = user.toObject();
