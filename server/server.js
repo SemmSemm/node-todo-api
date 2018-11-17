@@ -15,6 +15,9 @@ const port = process.env.PORT;
 
 app.use(bodyParser.json());
 
+/**
+ * Adding a new todo
+ */
 app.post('/todos', (req, res) => {
     var todo = new Todo({
         text: req.body.text,
@@ -28,6 +31,9 @@ app.post('/todos', (req, res) => {
     });
 });
 
+/**
+ * Get all todos
+ */
 app.get('/todos', (req, res) => {
     Todo.find().then((todos) => {
         res.send({ todos });
@@ -36,7 +42,9 @@ app.get('/todos', (req, res) => {
     });
 });
 
-// GET /todos/{id}
+/**
+ * Get todo by id specified in request
+ */
 app.get('/todos/:id', (req, res) => {
     var todoId = req.params.id;
 
@@ -54,6 +62,9 @@ app.get('/todos/:id', (req, res) => {
     });
 });
 
+/**
+ * Deleting todo with id specified in request
+ */
 app.delete('/todos/:id', (req, res) => {
     var todoId = req.params.id;
 
@@ -71,6 +82,9 @@ app.delete('/todos/:id', (req, res) => {
     });
 });
 
+/**
+ * Updating todo by id specified in request
+ */
 app.patch('/todos/:id', (req, res) => {
     var id = req.params.id;
     // _.pick() takes an object, in our case its body
@@ -83,7 +97,8 @@ app.patch('/todos/:id', (req, res) => {
     // console.log(_.isBoolean(body.completed));
     // console.log(body.completed);
     if (_.isBoolean(body.completed) && body.completed) {
-        body.completedat = new Date().getTime();
+        let date = new Date();
+        body.completedat = `${date.getFullYear()}-${(date.getMonth() + 1)}-${date.getDate()}`;
     } else {
         body.completed = false;
         body.completedat = null;
@@ -104,8 +119,9 @@ app.patch('/todos/:id', (req, res) => {
         });
 });
 
-// POST /users
-
+/**
+ * Adding a user
+ */
 app.post('/users', (req, res) => {
     var body = _.pick(req.body, ['name', 'email', 'password']);
     var user = new User(body);
@@ -122,6 +138,15 @@ app.post('/users', (req, res) => {
     }).catch((e) => {
         res.status(400).send(e);
     });
+});
+
+/**
+ * Get information about user
+ */
+app.get('/users/me', (req, res) => {
+    var token = req.header('x-auth');
+
+    User.findByUser(token);
 });
 
 app.listen(port, () => {

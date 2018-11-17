@@ -67,6 +67,9 @@ UserSchema.methods.generateAuthToken = function () {
     });
 };
 
+// TODO: findByToken
+// UserSchema.statics.findByToken();
+
 var User = mongoose.model('User', UserSchema);
 
 module.exports = { User };
