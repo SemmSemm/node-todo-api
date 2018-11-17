@@ -32,7 +32,7 @@ var UserSchema = new mongoose.Schema({
             required: true
         },
         token: {
-            type: String,
+            type: Number,
             required: true
         }
     }]

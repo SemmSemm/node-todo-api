@@ -97,8 +97,7 @@ app.patch('/todos/:id', (req, res) => {
     // console.log(_.isBoolean(body.completed));
     // console.log(body.completed);
     if (_.isBoolean(body.completed) && body.completed) {
-        let date = new Date();
-        body.completedat = `${date.getFullYear()}-${(date.getMonth() + 1)}-${date.getDate()}`;
+        body.completedat = new Date().getTime();
     } else {
         body.completed = false;
         body.completedat = null;
