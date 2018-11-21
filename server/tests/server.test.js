@@ -1,27 +1,13 @@
 const request = require('supertest');
 const expect = require('expect');
-const {ObjectID} = require('mongodb');
+const { ObjectID } = require('mongodb');
 
-const {app} = require('./../server');
-const {Todo} = require('./../models/todo');
-
-const todos = [{
-   _id: new ObjectID,
-    text: 'First test todo'
-}, {
-    _id: new ObjectID,
-    text: 'Second test todo',
-    completed: true,
-    completedat: 333
-}];
-
+const { app } = require('./../server');
+const { Todo } = require('./../models/todo');
+const { todos, populateTodos, users, populateUsers } = require('./seed/seeds');
 // before each test run we clear data from todos collection in database
-beforeEach((done) => {
-    Todo.remove({}).then(() => {
-        return Todo.insertMany(todos);
-    }).then(() => done());
-    // Todo.remove({}).then(() => done());
-});
+beforeEach(populateUsers);
+beforeEach(populateTodos);
 
 describe('POST /todos', () => {
     it('should create a new todo', (done) => {
@@ -29,34 +15,34 @@ describe('POST /todos', () => {
 
         request(app)
             .post('/todos')
-            .send({text})   // sending our object
+            .send({ text })   // sending our object
             .expect(200)    // expects status code 200 (OK)
             .expect((res) => { // expecting our response body with property 'text'  
                 expect(res.body.text).toBe(text); // be same as text property in toBe()
             })
             .end((err, res) => {
-                if(err) {   // if there is some errors, we ending scrypt with error
+                if (err) {   // if there is some errors, we ending scrypt with error
                     return done(err);
                 }
 
-                Todo.find({text}).then((todos) => {
+                Todo.find({ text }).then((todos) => {
                     expect(todos.length).toBe(1);
                     expect(todos[0].text).toBe(text);
                     done();
                 }).catch((e) => done(e));
             });
     });
-    
+
     it('should not create todo with invalid body data', (done) => {
         request(app)
             .post('/todos')
             .send({})
             .expect(400)
             .end((err, res) => {
-                if(err){
+                if (err) {
                     return done(err);
                 }
-                
+
                 Todo.find().then((todos) => {
                     expect(todos.length).toBe(2);
                     done();
@@ -85,7 +71,7 @@ describe('GET /todos/:id', () => {
             .get(`/todos/${todoId}`)
             .expect(200)
             .expect((res) => {
-                expect(res.body.todo.text).toBe(todos[0].text);
+                expect(res.body.text).toBe(todos[0].text);
             })
             .end(done);
     });
@@ -115,8 +101,8 @@ describe('DELETE /todos/:id', () => {
             .expect(200)
             .expect((res) => {
                 expect(res.body._id).toBe(hexId);
-            }).end((err,res) => {
-                if(err){
+            }).end((err, res) => {
+                if (err) {
                     return done(err);
                 }
 
@@ -156,9 +142,9 @@ describe('PATCH /todos/:id', () => {
             })
             .expect(200)
             .expect((res) => {
-                expect(res.body.todo.text).toBe(text);
-                expect(res.body.todo.completed).toBe(true);
-                expect(typeof res.body.todo.completedat).toBe('number');
+                expect(res.body.text).toBe(text);
+                expect(res.body.completed).toBe(true);
+                expect(typeof res.body.completedat).toBe('string');
             }).end(done);
     });
 
@@ -174,9 +160,35 @@ describe('PATCH /todos/:id', () => {
             })
             .expect(200)
             .expect((res) => {
-                expect(res.body.todo.text).toBe(text);
-                expect(res.body.todo.completed).toBe(false);
-                expect(res.body.todo.completedat).toBeFalsy();
+                expect(res.body.text).toBe(text);
+                expect(res.body.completed).toBe(false);
+                expect(res.body.completedat).toBeFalsy();
             }).end(done);
     });
 });
+
+describe('GET /users/me', () => {
+    it('should return user if authenticated', (done) => {
+        request(app)
+            .get('/users/me')
+            .set('x-auth', users[0].tokens[0].token)
+            .expect(200)
+            .expect((res) => {
+                expect(res.body._id).toBe(users[0]._id.toHexString());
+                expect(res.body.email).toBe(users[0].email);
+            })
+            .end(done);
+    });
+
+    it('should return 401 if not authenticated', (done) => {
+        request(app)
+            .get('/users/me')
+            .expect(401)
+            .expect((res) => {
+                expect(res.body).toEqual({ error: "Unauthorized" });
+            })
+            .end(done);
+    });
+});
+
+//TODO test cases for sign up, login, logout

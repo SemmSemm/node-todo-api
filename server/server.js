@@ -19,10 +19,11 @@ app.use(bodyParser.json());
 /**
  * Adding a new todo
  */
-app.post('/todos', (req, res) => {
+app.post('/todos', authenticate, (req, res) => {
     var todo = new Todo({
         text: req.body.text,
-        completed: req.body.completed
+        completed: req.body.completed,
+        _creator: req.user._id
     });
 
     todo.save().then((doc) => {
@@ -35,8 +36,10 @@ app.post('/todos', (req, res) => {
 /**
  * Get all todos
  */
-app.get('/todos', (req, res) => {
-    Todo.find().then((todos) => {
+app.get('/todos', authenticate, (req, res) => {
+    Todo.find({
+        _creator: req.user._id
+    }).then((todos) => {
         res.send({ todos });
     }, (e) => {
         res.status(400).send(e);
@@ -46,14 +49,17 @@ app.get('/todos', (req, res) => {
 /**
  * Get todo by id specified in request
  */
-app.get('/todos/:id', (req, res) => {
+app.get('/todos/:id', authenticate, (req, res) => {
     var todoId = req.params.id;
 
     if (!ObjectID.isValid(todoId)) {
         return res.status(404).send();
     }
 
-    Todo.findById(todoId).then((todo) => {
+    Todo.findOne({
+        _id: todoId,
+        _creator: req.user._id
+    }).then((todo) => {
         if (!todo) {
             return res.status(404).send('There is no todo exists');
         }
@@ -66,14 +72,17 @@ app.get('/todos/:id', (req, res) => {
 /**
  * Deleting todo with id specified in request
  */
-app.delete('/todos/:id', (req, res) => {
+app.delete('/todos/:id', authenticate, (req, res) => {
     var todoId = req.params.id;
 
     if (!ObjectID.isValid(todoId)) {
         return res.status(404).send();
     }
 
-    Todo.findByIdAndRemove(todoId).then((todo) => {
+    Todo.findOneAndRemove({
+        _id: todoId,
+        _creator: req.user.id
+    }).then((todo) => {
         if (!todo) {
             return res.status(404).send();
         }
@@ -86,7 +95,7 @@ app.delete('/todos/:id', (req, res) => {
 /**
  * Updating todo by id specified in request
  */
-app.patch('/todos/:id', (req, res) => {
+app.patch('/todos/:id', authenticate, (req, res) => {
     var id = req.params.id;
     // _.pick() takes an object, in our case its body
     // takes an array of properties, which we want to pull off
@@ -104,9 +113,12 @@ app.patch('/todos/:id', (req, res) => {
         body.completedat = null;
     }
 
-    Todo.findByIdAndUpdate(id, {
-        $set: body
+    Todo.findOneAndUpdate({
+        _id: id,
+        _creator: req.user.id
     }, {
+            $set: body
+        }, {
             new: true
         }).then((todo) => {
             if (!todo) {
@@ -132,9 +144,10 @@ app.post('/users', (req, res) => {
     // user.generateAuthToken
 
     user.save().then(() => {
-        return user.generateAuthToken();
-    }).then((token) => {
-        res.header('x-auth', token).send(user);
+        res.status(200).send(user);
+        //.then((token) => {
+        // res.header('x-auth', token).send(user);
+        // })
     }).catch((e) => {
         res.status(400).send(e);
     });
@@ -145,6 +158,26 @@ app.post('/users', (req, res) => {
  */
 app.get('/users/me', authenticate, (req, res) => {
     res.send(req.user);
+});
+
+app.post('/login', (req, res) => {
+    var body = _.pick(req.body, ['name', 'password']);
+
+    User.findByCredentials(body.name, body.password).then((user) => {
+        return user.generateAuthToken().then((token) => {
+            res.send({ name: user.name, email: user.email, access_token: token });
+        });
+    }).catch((e) => {
+        res.status(400).send();
+    });
+});
+
+app.delete('/logout', authenticate, (req, res) => {
+    req.user.removeToken(req.token).then(() => {
+        res.status(200).send();
+    }, () => {
+        res.status(400).send();
+    });
 });
 
 app.listen(port, () => {
