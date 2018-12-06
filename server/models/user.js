@@ -9,7 +9,11 @@ var UserSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
-        unique: true
+        unique: true,
+        validate: {
+            validator: val => hasValidLength(val, 5),
+            message: 'Username is too short'
+        }
     },
     email: {
         type: String,
@@ -25,7 +29,10 @@ var UserSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true,
-        minLength: 6
+        validate: {
+            validator: val => hasValidLength(val, 6),
+            message: 'Password should include 6 or more characters'
+        }
     },
     tokens: [{
         access: {
@@ -38,6 +45,16 @@ var UserSchema = new mongoose.Schema({
         }
     }]
 });
+
+var hasValidLength = (val, size) => {
+    if (val.length < size) {
+        return false;
+    } else {
+        return true;
+    }
+};
+
+// TODO var userValidation;
 
 // overriding mongoose toJSON method
 // determining how Mongoose documents get serialized by JSON.stringify()
