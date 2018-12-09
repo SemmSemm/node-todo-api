@@ -149,7 +149,22 @@ app.post('/users', (req, res) => {
         // res.header('x-auth', token).send(user);
         // })
     }).catch((e) => {
-        res.status(400).send(e);
+        // check if json parameter/object exist, and then return it
+        // pass it to another file called UserValidation
+        // return error object with error fields for each property
+        // E.g. "errors": {"name": "too short", "email": null, "username": null}
+        // Upd: if null, then dont return
+        var registerErrors = {};
+        if (e.errors.name) {
+            registerErrors.name = e.errors.name.message;
+        }
+        if (e.errors.email) {
+            registerErrors.email = e.errors.email.message;
+        }
+        if (e.errors.password) {
+            registerErrors.password = e.errors.password.message;
+        }
+        res.status(400).send(registerErrors);
     });
 });
 
