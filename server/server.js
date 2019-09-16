@@ -61,7 +61,7 @@ app.get('/todos/:id', authenticate, (req, res) => {
         _creator: req.user._id
     }).then((todo) => {
         if (!todo) {
-            return res.status(404).send('There is no todo exists');
+            return res.status(404).send('There is no todo exists yet.');
         }
         res.send(todo);
     }).catch((e) => {
