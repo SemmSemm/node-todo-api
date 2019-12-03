@@ -116,9 +116,9 @@ UserSchema.statics.findByToken = function (token) {
 UserSchema.statics.findByCredentials = function (name, password) {
     var User = this;
 
-    return User.findOne({ name }).then((user) => {
+    return User.findOne({ name }).then((user) => {  
         if (!user) {
-            return Promise.reject();
+            return Promise.reject({"error": "no user found"});
         }
 
         return new Promise((resolve, reject) => {
@@ -132,6 +132,17 @@ UserSchema.statics.findByCredentials = function (name, password) {
         });
     });
 };
+
+UserSchema.statics.getUserData = function (_id) {
+    var User = this;
+
+    return User.findOne({ _id }).then((user) => {
+        return new Promise((resolve) => {
+            console.log(user);
+            resolve(user);
+        });
+    })
+}
 
 UserSchema.pre('save', function (next) {
     var user = this;

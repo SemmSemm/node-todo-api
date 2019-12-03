@@ -1,5 +1,6 @@
 require('./config/config');
 
+const cors = require('cors');
 const express = require('express');
 const _ = require('lodash');
 const { ObjectID } = require('mongodb');
@@ -13,7 +14,7 @@ var { authenticate } = require('./middleware/authenticate');
 
 var app = express();
 const port = process.env.PORT;
-
+app.use(cors());
 app.use(bodyParser.json());
 
 /**
@@ -172,7 +173,12 @@ app.post('/users', (req, res) => {
  * Get information about user
  */
 app.get('/users/me', authenticate, (req, res) => {
-    res.send(req.user);
+    
+    User.getUserData(req.user._id).then((user) => {
+        res.status(200).send({email: user.email, name: user.name, password: user.password});
+    }).catch((e) => {
+        res.status(400).send(e);
+    });
 });
 
 app.post('/login', (req, res) => {
@@ -183,7 +189,7 @@ app.post('/login', (req, res) => {
             res.send({ name: user.name, email: user.email, access_token: token });
         });
     }).catch((e) => {
-        res.status(400).send();
+        res.status(400).send(e);
     });
 });
 
