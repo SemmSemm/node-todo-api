@@ -156,15 +156,23 @@ app.post('/users', (req, res) => {
         // E.g. "errors": {"name": "too short", "email": null, "username": null}
         // Upd: if null, then dont return
         var registerErrors = {};
-        if (e.errors.name) {
-            registerErrors.name = e.errors.name.message;
+        if(e.name && e.name === "MongoError") {
+            let key = Object.keys(e.keyPattern)[0];
+            registerErrors[key] = `This ${key} is already taken.`;
         }
-        if (e.errors.email) {
-            registerErrors.email = e.errors.email.message;
+        if(e.errors) {
+            console.log(e.errors);
+            if (e.errors.name) {
+                registerErrors.name = e.errors.name.message;
+            }
+            if (e.errors.email) {
+                registerErrors.email = e.errors.email.message;
+            }
+            if (e.errors.password) {
+                registerErrors.password = e.errors.password.message;
+            }
         }
-        if (e.errors.password) {
-            registerErrors.password = e.errors.password.message;
-        }
+		console.log(registerErrors);
         res.status(400).send(registerErrors);
     });
 });
